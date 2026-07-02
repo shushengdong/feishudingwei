@@ -140,6 +140,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btn_select_app).setOnClickListener { showAppSelector() }
         findViewById<Button>(R.id.btn_wifi_config).setOnClickListener { showWifiConfigDialog() }
         btnStopMock.setOnClickListener { stopMock() }
+        findViewById<Button>(R.id.btn_guide).setOnClickListener { showUsageGuide() }
         findViewById<TextView>(R.id.tv_setup_guide).setOnClickListener {
             startActivity(Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS))
         }
@@ -526,7 +527,36 @@ class MainActivity : AppCompatActivity() {
         return sb.toString()
     }
 
-    // ========== 持久化 ==========
+    // ========== Usage Guide ==========
+
+    private fun showUsageGuide() {
+        val guide = "=== Location Mod Usage Guide ===\n\n" +
+                "1. Developer Options\n" +
+                "   Settings > Developer Options > Mock Location App\n" +
+                "   Select 'LocationMod' as mock location provider\n" +
+                "   REQUIRED for location spoofing\n\n" +
+                "2. Select Target App\n" +
+                "   Choose the app to spoof (DingTalk, WeChat, etc.)\n\n" +
+                "3. Set Target Location\n" +
+                "   Tap Capture for current GPS or Map to pick visually\n" +
+                "   Save the location after naming it\n\n" +
+                "4. Configure WiFi (Optional)\n" +
+                "   Tap WiFi to capture current network info\n" +
+                "   This helps anti-detection matching\n\n" +
+                "5. Apply & Launch\n" +
+                "   Tap a saved location, then Apply + Launch\n" +
+                "   Use Stop button when done\n\n" +
+                "Note: Mock location affects ALL apps.\n" +
+                "Keep LocationMod running in background."
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Usage Guide")
+            .setMessage(guide)
+            .setPositiveButton("OK", null)
+            .show()
+    }
+
+    // ========== Persistence ==========
 
     private fun loadSavedLocations() {
         val json = getSharedPreferences("locations", 0).getString("data", null) ?: return
