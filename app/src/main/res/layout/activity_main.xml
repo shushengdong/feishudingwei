@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#F5F5F5">
+
+    <!-- 标题（长按5次进入开发者模式） -->
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="定位修改和运用"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <!-- 当前GPS位置 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="8dp"
+        android:background="#FFFFFF"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="当前位置"
+            android:textSize="13sp"
+            android:textColor="#666" />
+
+        <TextView
+            android:id="@+id/tv_current_coords"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="等待定位..."
+            android:textSize="13sp"
+            android:textColor="#333" />
+    </LinearLayout>
+
+    <!-- 模拟状态 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="8dp"
+        android:background="#FFFFFF"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:id="@+id/tv_mock_status"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="○ 未启动"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btn_stop_mock"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="停止"
+            android:textSize="12sp"
+            android:enabled="false"
+            android:layout_marginStart="8dp"
+            style="@style/Widget.Material3.Button.TonalButton" />
+
+        <Button
+            android:id="@+id/btn_map_picker"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="地图选点"
+            android:textSize="12sp"
+            android:layout_marginStart="4dp"
+            style="@style/Widget.Material3.Button.TonalButton" />
+    </LinearLayout>
+
+    <!-- 目标App选择 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="8dp"
+        android:background="#FFFFFF"
+        android:layout_marginBottom="4dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="目标App:"
+            android:textSize="13sp"
+            android:textColor="#666"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:id="@+id/tv_selected_app"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="未选择"
+            android:textSize="13sp"
+            android:textColor="#999" />
+
+        <Button
+            android:id="@+id/btn_select_app"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:text="选择App"
+            android:textSize="11sp"
+            style="@style/Widget.Material3.Button.TonalButton" />
+    </LinearLayout>
+
+    <!-- 捕获 + WiFi按钮 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="4dp">
+
+        <Button
+            android:id="@+id/btn_capture"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="捕获当前位置"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/btn_wifi_config"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="WiFi配置"
+            android:layout_marginStart="4dp" />
+    </LinearLayout>
+
+    <!-- WiFi/基站信息栏 -->
+    <LinearLayout
+        android:id="@+id/ll_env_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="6dp"
+        android:background="#E8F5E9"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="4dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tv_env_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="环境: 未设置"
+            android:textSize="11sp"
+            android:textColor="#2E7D32" />
+    </LinearLayout>
+
+    <!-- 保存列表标题 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="4dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="已保存的位置"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_setup_guide"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="开发者设置"
+            android:textSize="11sp"
+            android:textColor="#2196F3"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="4dp" />
+    </LinearLayout>
+
+    <!-- 位置列表 -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_locations"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- 反检测提示 -->
+    <TextView
+        android:id="@+id/tv_anti_detect"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="11sp"
+        android:textColor="#888"
+        android:layout_marginTop="4dp" />
+
+</LinearLayout>

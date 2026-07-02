@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>选择位置</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;font-family:"Microsoft YaHei","PingFang SC",sans-serif}
+#map{width:100%;height:100%}
+.crosshair{position:fixed;top:50%;left:50%;width:44px;height:44px;transform:translate(-50%,-50%);pointer-events:none;z-index:1000}
+.crosshair::before,.crosshair::after{content:'';position:absolute;background:rgba(229,57,53,0.9)}
+.crosshair::before{width:2px;height:44px;left:21px;top:0}
+.crosshair::after{width:44px;height:2px;left:0;top:21px}
+.crosshair-dot{position:absolute;top:17px;left:17px;width:10px;height:10px;border:2px solid rgba(229,57,53,0.8);border-radius:50%}
+.bar{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,0.95);padding:12px 16px;box-shadow:0 -2px 12px rgba(0,0,0,.2);z-index:999}
+.coords{font-size:13px;color:#333;margin-bottom:6px;text-align:center;line-height:1.4}
+.address{font-size:11px;color:#888;margin-bottom:8px;text-align:center;line-height:1.3;min-height:16px}
+.btns{display:flex;gap:8px}
+.btn{flex:1;padding:12px;border:none;border-radius:8px;font-size:15px;cursor:pointer;font-weight:500}
+.btn-ok{background:#4CAF50;color:#fff}
+.btn-no{background:#eee;color:#333}
+.search-box{position:fixed;top:12px;left:12px;right:12px;z-index:999;display:flex;gap:6px}
+.search-input{flex:1;padding:10px 14px;border:none;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.25);font-size:14px;outline:none;background:rgba(255,255,255,0.95)}
+.search-btn{padding:10px 14px;border:none;border-radius:10px;background:#4CAF50;color:#fff;font-size:14px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.25);white-space:nowrap}
+.searching{background:#999!important}
+.result-list{position:fixed;top:56px;left:12px;right:12px;z-index:998;background:rgba(255,255,255,0.98);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.2);max-height:50vh;overflow-y:auto;display:none}
+.result-item{padding:12px 14px;border-bottom:1px solid #eee;cursor:pointer;font-size:13px;color:#333}
+.result-item:hover,.result-item:active{background:#E8F5E9}
+.result-item .name{font-weight:500}
+.result-item .detail{font-size:11px;color:#999;margin-top:2px}
+.marker-pin{width:30px;height:30px;margin-left:-15px;margin-top:-30px}
+</style>
+</head>
+<body>
+<div class="search-box">
+<input class="search-input" id="search" placeholder="搜索地址..." autocomplete="off">
+<button class="search-btn" id="searchBtn" onclick="searchPlace()">搜索</button>
+</div>
+<div class="result-list" id="resultList"></div>
+<div class="crosshair"><div class="crosshair-dot"></div></div>
+<div id="map"></div>
+<div class="bar">
+<div class="coords" id="coords">拖动地图，十字准星对准目标</div>
+<div class="address" id="address"></div>
+<div class="btns">
+<button class="btn btn-no" onclick="doCancel()">取消</button>
+<button class="btn btn-ok" onclick="doConfirm()">确认此位置</button>
+</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// 初始化地图 - 使用多个瓦片源确保可靠
+var map = L.map('map', { zoomControl: false }).setView([INIT_LAT, INIT_LNG], 15);
+
+// 主要瓦片：高德（国内快）
+var gaodeLayer = L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+  subdomains: '1234', maxZoom: 18
+}).addTo(map);
+
+// 备用瓦片：OSM
+var osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 });
+
+L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+// 当前地址缓存
+var currentAddress = '';
+var geocodeTimer = null;
+
+// 更新坐标和地址
+function updateInfo() {
+  var c = map.getCenter();
+  document.getElementById('coords').textContent = c.lat.toFixed(6) + ', ' + c.lng.toFixed(6);
+  // 延迟反地理编码（防抖）
+  if (geocodeTimer) clearTimeout(geocodeTimer);
+  geocodeTimer = setTimeout(function() {
+    reverseGeocode(c.lat, c.lng);
+  }, 400);
+}
+
+function reverseGeocode(lat, lng) {
+  var addrEl = document.getElementById('address');
+  addrEl.textContent = '获取地址中...';
+  // 使用 Nominatim 反向地理编码
+  fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&zoom=18&accept-language=zh')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d && d.display_name) {
+        currentAddress = d.display_name;
+        addrEl.textContent = d.display_name;
+        // 通知 Android 更新地址
+        try { if (window.Android) window.Android.onAddressUpdate(d.display_name); } catch(e) {}
+      } else {
+        addrEl.textContent = '（无地址信息）';
+        currentAddress = '';
+      }
+    })
+    .catch(function() {
+      addrEl.textContent = '（地址获取失败）';
+      currentAddress = '';
+    });
+}
+
+map.on('move', updateInfo);
+map.on('moveend', updateInfo);
+updateInfo();
+
+// 回车搜索
+document.getElementById('search').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') searchPlace();
+});
+
+// 搜索函数
+function searchPlace() {
+  var q = document.getElementById('search').value.trim();
+  if (!q) { return; }
+
+  var btn = document.getElementById('searchBtn');
+  var origText = btn.textContent;
+  btn.textContent = '搜索中...';
+  btn.className = 'search-btn searching';
+  document.getElementById('coords').textContent = '搜索: ' + q;
+
+  // 使用 Nominatim（支持 CORS，无需 key）
+  var url = 'https://nominatim.openstreetmap.org/search?format=json&q='
+    + encodeURIComponent(q)
+    + '&limit=5&accept-language=zh&countrycodes=cn';
+  
+  fetch(url, { headers: { 'User-Agent': 'LocationApp/2.0' } })
+    .then(function(r) { return r.json(); })
+    .then(function(results) {
+      btn.textContent = origText;
+      btn.className = 'search-btn';
+      if (results && results.length > 0) {
+        if (results.length === 1) {
+          // 只有一个结果，直接定位
+          var r = results[0];
+          map.setView([parseFloat(r.lat), parseFloat(r.lon)], 17);
+          updateInfo();
+          var marker = L.marker([parseFloat(r.lat), parseFloat(r.lon)]).addTo(map);
+          setTimeout(function() { map.removeLayer(marker); }, 3000);
+        } else {
+          // 多个结果，显示选择列表
+          showResultList(results);
+        }
+      } else {
+        document.getElementById('coords').textContent = '未找到: ' + q;
+        updateInfo();
+      }
+    })
+    .catch(function(err) {
+      btn.textContent = origText;
+      btn.className = 'search-btn';
+      // 回退到 Photon
+      fetch('https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&limit=5&lang=zh')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (d && d.features && d.features.length > 0) {
+            if (d.features.length === 1) {
+              var coords = d.features[0].geometry.coordinates;
+              map.setView([coords[1], coords[0]], 17);
+              updateInfo();
+            } else {
+              var items = d.features.map(function(f, i) {
+                return {
+                  name: f.properties.name || f.properties.street || '位置' + (i+1),
+                  detail: [f.properties.city, f.properties.country].filter(Boolean).join(', '),
+                  lat: f.geometry.coordinates[1],
+                  lon: f.geometry.coordinates[0]
+                };
+              });
+              showResultList(items);
+            }
+          } else {
+            document.getElementById('coords').textContent = '未找到: ' + q;
+            updateInfo();
+          }
+        })
+        .catch(function() {
+          document.getElementById('coords').textContent = '搜索失败，请检查网络';
+          updateInfo();
+        });
+    });
+}
+
+function showResultList(results) {
+  var list = document.getElementById('resultList');
+  var html = '';
+  results.forEach(function(r, i) {
+    var displayName = r.display_name || r.name || ('结果' + (i+1));
+    // Nominatim results have display_name, Photon has name
+    var name = r.display_name ? r.display_name.split(',')[0] : (r.name || '结果' + (i+1));
+    var detail = r.display_name ? r.display_name.split(',').slice(1).join(',') : (r.detail || '');
+    html += '<div class="result-item" onclick="selectResult(' + i + ')" data-i="' + i + '">'
+      + '<div class="name">' + name + '</div>'
+      + (detail ? '<div class="detail">' + detail.trim() + '</div>' : '')
+      + '</div>';
+  });
+  list.innerHTML = html;
+  list.style.display = 'block';
+  // 存储结果用于选择
+  window._searchResults = results;
+}
+
+function selectResult(i) {
+  var results = window._searchResults;
+  var r = results[i];
+  var lat, lon;
+  if (r.lat !== undefined && r.lon !== undefined) {
+    lat = parseFloat(r.lat);
+    lon = parseFloat(r.lon);
+  } else if (r.geometry && r.geometry.coordinates) {
+    lat = r.geometry.coordinates[1];
+    lon = r.geometry.coordinates[0];
+  } else {
+    return;
+  }
+  map.setView([lat, lon], 17);
+  updateInfo();
+  document.getElementById('resultList').style.display = 'none';
+  // 放一个临时标记
+  var marker = L.marker([lat, lon]).addTo(map);
+  setTimeout(function() { map.removeLayer(marker); }, 3000);
+}
+
+// 点击地图空白处关闭结果列表
+map.on('click', function() {
+  document.getElementById('resultList').style.display = 'none';
+});
+
+// 双击切换瓦片源
+var lastTap = 0;
+map.on('dblclick', function() {
+  if (map.hasLayer(osmLayer)) {
+    map.removeLayer(osmLayer);
+    if (!map.hasLayer(gaodeLayer)) gaodeLayer.addTo(map);
+  } else {
+    gaodeLayer.remove();
+    osmLayer.addTo(map);
+  }
+});
+
+function doConfirm() {
+  var c = map.getCenter();
+  try {
+    if (window.Android) {
+      window.Android.onLocationSelected(c.lat, c.lng, currentAddress || '');
+    }
+  } catch(e) {}
+}
+
+function doCancel() {
+  try {
+    if (window.Android) window.Android.onCancel();
+  } catch(e) {}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:padding="12dp"
+    android:background="#FFFFFF"
+    android:layout_marginHorizontal="4dp"
+    android:layout_marginBottom="6dp"
+    android:elevation="1dp">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_loc_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="公司"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#333" />
+
+        <TextView
+            android:id="@+id/tv_loc_coords"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="39.904200, 116.407396"
+            android:textSize="12sp"
+            android:textColor="#888"
+            android:layout_marginTop="2dp" />
+
+        <TextView
+            android:id="@+id/tv_loc_target_app"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="→ 飞书"
+            android:textSize="11sp"
+            android:textColor="#4CAF50"
+            android:visibility="gone"
+            android:layout_marginTop="2dp" />
+
+        <TextView
+            android:id="@+id/tv_loc_wifi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="10sp"
+            android:textColor="#FF9800"
+            android:visibility="gone"
+            android:layout_marginTop="1dp" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/btn_delete_loc"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="删除"
+        android:layout_marginEnd="4dp" />
+
+    <Button
+        android:id="@+id/btn_apply_loc"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:text="应用"
+        android:textSize="12sp"
+        style="@style/Widget.Material3.Button.TonalButton" />
+
+</LinearLayout>
