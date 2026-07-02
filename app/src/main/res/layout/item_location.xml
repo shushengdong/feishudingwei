@@ -38,7 +38,7 @@
             android:id="@+id/tv_loc_target_app"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="→ 飞书"
+            android:text="�?飞书"
             android:textSize="11sp"
             android:textColor="#4CAF50"
             android:visibility="gone"
@@ -70,6 +70,6 @@
         android:layout_height="36dp"
         android:text="应用"
         android:textSize="12sp"
-        style="@style/Widget.Material3.Button.TonalButton" />
+        android:backgroundTint="#E0E0E0" />
 
 </LinearLayout>

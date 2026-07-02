@@ -6,12 +6,12 @@
     android:padding="16dp"
     android:background="#F5F5F5">
 
-    <!-- 标题（长按5次进入开发者模式） -->
+    <!-- 标题（长�?次进入开发者模式） -->
     <TextView
         android:id="@+id/tv_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="定位修改和运用"
+        android:text="定位修改和运�?
         android:textSize="22sp"
         android:textStyle="bold"
         android:layout_marginBottom="8dp" />
@@ -43,7 +43,7 @@
             android:textColor="#333" />
     </LinearLayout>
 
-    <!-- 模拟状态 -->
+    <!-- 模拟状�?-->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -58,7 +58,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="○ 未启动"
+            android:text="�?未启�?
             android:textSize="14sp"
             android:textStyle="bold" />
 
@@ -70,7 +70,7 @@
             android:textSize="12sp"
             android:enabled="false"
             android:layout_marginStart="8dp"
-            style="@style/Widget.Material3.Button.TonalButton" />
+            android:backgroundTint="#E0E0E0" />
 
         <Button
             android:id="@+id/btn_map_picker"
@@ -79,7 +79,7 @@
             android:text="地图选点"
             android:textSize="12sp"
             android:layout_marginStart="4dp"
-            style="@style/Widget.Material3.Button.TonalButton" />
+            android:backgroundTint="#E0E0E0" />
     </LinearLayout>
 
     <!-- 目标App选择 -->
@@ -115,7 +115,7 @@
             android:layout_height="32dp"
             android:text="选择App"
             android:textSize="11sp"
-            style="@style/Widget.Material3.Button.TonalButton" />
+            android:backgroundTint="#E0E0E0" />
     </LinearLayout>
 
     <!-- 捕获 + WiFi按钮 -->
@@ -143,7 +143,7 @@
             android:layout_marginStart="4dp" />
     </LinearLayout>
 
-    <!-- WiFi/基站信息栏 -->
+    <!-- WiFi/基站信息�?-->
     <LinearLayout
         android:id="@+id/ll_env_info"
         android:layout_width="match_parent"
@@ -159,7 +159,7 @@
             android:id="@+id/tv_env_info"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="环境: 未设置"
+            android:text="环境: 未设�?
             android:textSize="11sp"
             android:textColor="#2E7D32" />
     </LinearLayout>
@@ -185,7 +185,7 @@
             android:id="@+id/tv_setup_guide"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="开发者设置"
+            android:text="开发者设�?
             android:textSize="11sp"
             android:textColor="#2196F3"
             android:clickable="true"
@@ -200,7 +200,7 @@
         android:layout_height="0dp"
         android:layout_weight="1" />
 
-    <!-- 反检测提示 -->
+    <!-- 反检测提�?-->
     <TextView
         android:id="@+id/tv_anti_detect"
         android:layout_width="match_parent"
