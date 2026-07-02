@@ -331,6 +331,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun applyMock(loc: SavedLocation) {
+        // Check if this app is set as mock location provider
+        val mockApp = Settings.Secure.getString(contentResolver, "mock_location")
+        if (mockApp.isNullOrEmpty() || mockApp != packageName) {
+            Toast.makeText(this, "Mock Location not configured!", Toast.LENGTH_LONG).show()
+            MaterialAlertDialogBuilder(this)
+                .setTitle("Mock Location Required")
+                .setMessage("Go to:\nSettings > Developer Options > Select mock location app\n\nChoose 'LocationMod' as the mock location provider.\n\nThis is REQUIRED for location spoofing.")
+                .setPositiveButton("Open Settings") { _, _ ->
+                    try {
+                        startActivity(Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS))
+                    } catch (_: Exception) {}
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+            return
+        }
+
         startService(Intent(this, MockService::class.java).apply {
             putExtra("lat", loc.lat)
             putExtra("lng", loc.lng)
