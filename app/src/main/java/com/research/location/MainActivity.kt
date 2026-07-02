@@ -8,6 +8,7 @@ import android.location.Location
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.view.View
@@ -15,7 +16,6 @@ import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.location.*
@@ -25,7 +25,6 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.research.location.model.SavedLocation
 import com.research.location.model.AppInfo
-import kotlinx.coroutines.*
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -37,14 +36,6 @@ class MainActivity : AppCompatActivity() {
     // -- 定位 --
     private lateinit var client: FusedLocationProviderClient
     private var currentLocation: Location? = null
-    private val locationCallback = object : LocationCallback() {
-        override fun onLocationResult(r: LocationResult) {
-            currentLocation = r.lastLocation
-            r.lastLocation?.let {
-                tvCurrentCoords.text = "📍 ${df.format(it.latitude)}, ${df.format(it.longitude)} (±${it.accuracy.toInt()}m)"
-            }
-        }
-    }
 
     // -- 数据 --
     private val savedLocations = mutableListOf<SavedLocation>()
@@ -91,6 +82,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // -- 定位回调 --
+    private val locationCallback = object : LocationCallback() {
+        override fun onLocationResult(r: LocationResult) {
+            currentLocation = r.lastLocation
+            r.lastLocation?.let {
+                tvCurrentCoords.text = "\uD83D\uDCCD ${df.format(it.latitude)}, ${df.format(it.longitude)} (\u00B1${it.accuracy.toInt()}m)"
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -113,13 +114,12 @@ class MainActivity : AppCompatActivity() {
         rvLocations = findViewById(R.id.rv_locations)
         btnStopMock = findViewById(R.id.btn_stop_mock)
 
-        // 标题栏长按5次进入开发者模式
         tvTitle.setOnLongClickListener {
             devTapCount++
             if (devTapCount >= 5 && !devModeEnabled) {
                 devModeEnabled = true
-                Toast.makeText(this, "🔧 开发者模式已启用", Toast.LENGTH_LONG).show()
-                tvTitle.text = "📍 定位修改和运用 [DEV]"
+                Toast.makeText(this, "\uD83D\uDD27 开发者模式已启用", Toast.LENGTH_LONG).show()
+                tvTitle.text = "\uD83D\uDCCD 定位修改和运用 [DEV]"
                 devTapCount = 0
             } else if (devTapCount in 1..4) {
                 Toast.makeText(this, "再长按${5 - devTapCount}次进入开发者模式", Toast.LENGTH_SHORT).show()
@@ -140,7 +140,6 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btn_select_app).setOnClickListener { showAppSelector() }
         findViewById<Button>(R.id.btn_wifi_config).setOnClickListener { showWifiConfigDialog() }
         btnStopMock.setOnClickListener { stopMock() }
-        findViewById<Button>(R.id.btn_guide).setOnClickListener { showUsageGuide() }
         findViewById<TextView>(R.id.tv_setup_guide).setOnClickListener {
             startActivity(Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS))
         }
@@ -222,19 +221,20 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        // 首先尝试使用已有的位置
+        // 优先使用缓存位置
         currentLocation?.let { loc ->
             val (fuzzedLat, fuzzedLng) = fuzzCoordinate(loc.latitude, loc.longitude)
             showSaveDialog(fuzzedLat, fuzzedLng)
             return
         }
 
-        // 没有缓存位置，强制请求一次新鲜位置
+        // 无缓存，强制获取新位置
         Toast.makeText(this, "正在获取位置...", Toast.LENGTH_SHORT).show()
         try {
             client.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
                 .addOnSuccessListener { loc ->
                     if (loc != null) {
+                        currentLocation = loc
                         val (fuzzedLat, fuzzedLng) = fuzzCoordinate(loc.latitude, loc.longitude)
                         showSaveDialog(fuzzedLat, fuzzedLng)
                     } else {
@@ -245,7 +245,7 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this, "定位失败: ${e.message}", Toast.LENGTH_LONG).show()
                 }
         } catch (e: SecurityException) {
-            Toast.makeText(this, "权限不足，请重新授权", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "权限不足", Toast.LENGTH_SHORT).show()
             checkPermissions()
         }
     }
@@ -267,11 +267,11 @@ class MainActivity : AppCompatActivity() {
             openMapPickerAt(curLat, curLng)
         }
 
-        val note = if (selectedAppName.isNotEmpty()) "目标App: $selectedAppName" else ""
+        val note = if (selectedAppName.isNotEmpty()) "目标App: $selectedAppName" else null
         MaterialAlertDialogBuilder(this)
             .setTitle("保存标记点")
             .setView(view)
-            .setMessage(if (note.isNotEmpty()) note else null)
+            .apply { if (note != null) setMessage(note) }
             .setPositiveButton("保存") { _, _ ->
                 val name = etName.text?.toString()?.ifBlank { generateCryptoName() } ?: return@setPositiveButton
                 val saveLat = etLat.text.toString().toDoubleOrNull() ?: lat
@@ -310,10 +310,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun showApplyDialog(loc: SavedLocation) {
         val msgs = buildString {
-            append("📍 ${loc.name}\n")
+            append("\uD83D\uDCCD ${loc.name}\n")
             append("坐标: ${df.format(loc.lat)}, ${df.format(loc.lng)}")
-            if (loc.targetAppName.isNotEmpty()) append("\n🎯 目标: ${loc.targetAppName}")
-            if (loc.wifiSsid.isNotEmpty()) append("\n📶 WiFi: ${loc.wifiSsid}")
+            if (loc.targetAppName.isNotEmpty()) append("\n\uD83C\uDFAF 目标: ${loc.targetAppName}")
+            if (loc.wifiSsid.isNotEmpty()) append("\n\uD83D\uDCE1 WiFi: ${loc.wifiSsid}")
         }
 
         val builder = MaterialAlertDialogBuilder(this)
@@ -330,53 +330,43 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun applyMock(loc: SavedLocation) {
-        // 先停止旧的
-        if (mockActive) stopService(Intent(this, MockService::class.java))
+        startService(Intent(this, MockService::class.java).apply {
+            putExtra("lat", loc.lat)
+            putExtra("lng", loc.lng)
+            putExtra("targetPackage", loc.targetAppPackage)
+            putExtra("targetApp", loc.targetAppName)
+            putExtra("wifiSsid", loc.wifiSsid)
+            putExtra("wifiBssid", loc.wifiBssid)
+            putExtra("mcc", loc.mcc)
+            putExtra("mnc", loc.mnc)
+            putExtra("lac", loc.lac)
+            putExtra("cid", loc.cid)
+        })
+        mockActive = true
+        updateMockStatus()
+        Toast.makeText(this, "定位已修改: ${loc.name}", Toast.LENGTH_SHORT).show()
 
-        lifecycleScope.launch(Dispatchers.IO) {
-            // 让服务有时间停止
-            delay(300)
-            withContext(Dispatchers.Main) {
-                startService(Intent(this@MainActivity, MockService::class.java).apply {
-                    putExtra("lat", loc.lat)
-                    putExtra("lng", loc.lng)
-                    putExtra("targetPackage", loc.targetAppPackage)
-                    putExtra("targetApp", loc.targetAppName)
-                    putExtra("wifiSsid", loc.wifiSsid)
-                    putExtra("wifiBssid", loc.wifiBssid)
-                    putExtra("mcc", loc.mcc)
-                    putExtra("mnc", loc.mnc)
-                    putExtra("lac", loc.lac)
-                    putExtra("cid", loc.cid)
-                })
-                mockActive = true
-                updateMockStatus()
-                Toast.makeText(this@MainActivity, "定位已修改: ${loc.name}", Toast.LENGTH_SHORT).show()
-
-                if (loc.wifiSsid.isNotEmpty()) {
-                    tvEnvInfo.text = "WiFi: ${loc.wifiSsid} | BSSID: ${loc.wifiBssid}"
-                    llEnvInfo.visibility = View.VISIBLE
-                }
-            }
+        if (loc.wifiSsid.isNotEmpty()) {
+            tvEnvInfo.text = "WiFi: ${loc.wifiSsid} | BSSID: ${loc.wifiBssid}"
+            llEnvInfo.visibility = View.VISIBLE
         }
     }
 
     private fun applyAndLaunch(loc: SavedLocation) {
         applyMock(loc)
-        lifecycleScope.launch {
-            delay(800)
+        Handler(Looper.getMainLooper()).postDelayed({
             try {
                 val intent = packageManager.getLaunchIntentForPackage(loc.targetAppPackage)
                 if (intent != null) {
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     startActivity(intent)
                 } else {
-                    Toast.makeText(this@MainActivity, "无法启动: ${loc.targetAppName}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "无法启动: ${loc.targetAppName}", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@MainActivity, "启动失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "启动失败: ${e.message}", Toast.LENGTH_SHORT).show()
             }
-        }
+        }, 800)
     }
 
     private fun stopMock() {
@@ -388,7 +378,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateMockStatus() {
-        tvMockStatus.text = if (mockActive) "● 运行中 | 点击停止→" else "○ 未启动"
+        tvMockStatus.text = if (mockActive) "\u25CF 运行中 | 点击停止\u2192" else "\u25CB 未启动"
         tvMockStatus.setTextColor(if (mockActive) 0xFF4CAF50.toInt() else 0xFF999999.toInt())
         btnStopMock.isEnabled = mockActive
     }
@@ -399,7 +389,6 @@ class MainActivity : AppCompatActivity() {
         installedApps.clear()
         val pm = packageManager
 
-        // 优先加载已知打卡App
         val known = mapOf(
             "com.alibaba.android.rimet" to "钉钉",
             "com.tencent.wework" to "企业微信",
@@ -414,7 +403,6 @@ class MainActivity : AppCompatActivity() {
             try { pm.getPackageInfo(pkg, 0); installedApps.add(AppInfo(pkg, name)) } catch (_: Exception) {}
         }
 
-        // 加载其他所有App
         val mainIntent = Intent(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_LAUNCHER) }
         for (ri in pm.queryIntentActivities(mainIntent, 0)) {
             val pkg = ri.activityInfo.packageName
@@ -432,7 +420,7 @@ class MainActivity : AppCompatActivity() {
                 val app = installedApps[which]
                 selectedAppPkg = app.packageName
                 selectedAppName = app.appName
-                tvSelectedApp.text = "✓ ${app.appName}"
+                tvSelectedApp.text = "\u2713 ${app.appName}"
                 AntiDetection.tryHideMockLocationFlag(this)
                 val profile = AntiDetection.getProfile(app.packageName)
                 Toast.makeText(this, "${app.appName} | ${profile.extraMeasures.firstOrNull() ?: "标准防护"}",
@@ -465,20 +453,17 @@ class MainActivity : AppCompatActivity() {
         val view = try {
             layoutInflater.inflate(R.layout.dialog_wifi_config, null)
         } catch (e: Exception) {
-            Toast.makeText(this, "界面加载失败: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "界面加载失败", Toast.LENGTH_SHORT).show()
             return
         }
 
         val etSsid = view.findViewById<TextInputEditText>(R.id.et_wifi_ssid)
         val etBssid = view.findViewById<TextInputEditText>(R.id.et_wifi_bssid)
-        val btnCapture = view.findViewById<Button>(R.id.btn_capture_wifi)
-        val btnGen = view.findViewById<Button>(R.id.btn_gen_bssid)
 
-        // 自动加载当前WiFi
         etSsid.setText(tempWifiSsid)
         etBssid.setText(tempWifiBssid)
 
-        // 如果还没设置过，自动捕获一次
+        // 自动捕获
         if (tempWifiSsid.isEmpty()) {
             try {
                 val wm = applicationContext.getSystemService(WIFI_SERVICE) as? WifiManager
@@ -492,7 +477,7 @@ class MainActivity : AppCompatActivity() {
             } catch (_: Exception) {}
         }
 
-        btnCapture.setOnClickListener {
+        findViewById<Button>(R.id.btn_capture_wifi).setOnClickListener {
             try {
                 val wm = applicationContext.getSystemService(WIFI_SERVICE) as? WifiManager
                 if (wm == null) {
@@ -505,70 +490,28 @@ class MainActivity : AppCompatActivity() {
                 if (ssid.isNotEmpty() && ssid != "0x" && ssid != "<unknown ssid>") {
                     etSsid.setText(ssid)
                     etBssid.setText(bssid)
-                    Toast.makeText(this, "已捕获: $ssid\nBSSID: $bssid", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "已捕获: $ssid", Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(this, "⚠ 手机未连接WiFi，请先连接WiFi再捕获", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "未连接WiFi，请先连接WiFi再捕获", Toast.LENGTH_LONG).show()
                 }
             } catch (e: Exception) {
                 Toast.makeText(this, "捕获失败: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
 
-        btnGen.setOnClickListener {
+        findViewById<Button>(R.id.btn_gen_bssid).setOnClickListener {
             etBssid.setText(generateRandomBssid())
-            Toast.makeText(this, "已生成随机BSSID", Toast.LENGTH_SHORT).show()
         }
 
         MaterialAlertDialogBuilder(this)
-            .setTitle("📶 WiFi信息配置")
+            .setTitle("WiFi信息配置")
             .setView(view)
-            .setMessage("设置与GPS位置对应的WiFi信息，用于对抗WiFi列表检测")
             .setPositiveButton("保存") { _, _ ->
                 tempWifiSsid = etSsid.text?.toString()?.trim() ?: ""
                 tempWifiBssid = etBssid.text?.toString()?.trim() ?: ""
-                if (tempWifiSsid.isNotEmpty()) {
-                    Toast.makeText(this, "WiFi配置已保存: $tempWifiSsid", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(this, "WiFi配置已清空", Toast.LENGTH_SHORT).show()
-                }
+                Toast.makeText(this, "WiFi配置已保存", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("取消", null)
-            .show()
-    }
-
-    // ========== 使用说明 ==========
-
-    private fun showUsageGuide() {
-        val guide = """
-            📍 定位修改工具 — 使用说明
-            
-            1️⃣ 选择目标App
-            点击「选择App」→ 选择需要修改定位的App（如钉钉、飞书等）
-            
-            2️⃣ 设置目标位置
-            • 点击「捕获当前位置」获取手机当前GPS坐标
-            • 点击「地图选点」在地图上自由选择位置
-            • 输入名称后保存位置到列表
-            
-            3️⃣ 配置WiFi（重要）
-            点击「WiFi配置」→ 连接目标地点的WiFi后捕获，或手动设置SSID/BSSID
-            此举用于对抗打卡软件检测WiFi与GPS一致性
-            
-            4️⃣ 应用模拟
-            在位置列表点击「应用」→ 选择「应用并启动App」
-            系统会自动修改定位并启动目标应用
-            
-            ⚠ 注意事项
-            • 需开启开发者选项 → 选择模拟位置信息应用 → 选择「定位修改和运用」
-            • 保持本App在前台运行时模拟才能生效
-            • 如被检测到，请检查WiFi/基站配置是否与GPS匹配
-            • 模拟位置是系统级功能，会对所有请求位置的App生效
-        """.trimIndent()
-
-        MaterialAlertDialogBuilder(this)
-            .setTitle("使用说明")
-            .setMessage(guide)
-            .setPositiveButton("知道了", null)
             .show()
     }
 
