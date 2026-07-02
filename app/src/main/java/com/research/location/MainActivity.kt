@@ -477,7 +477,7 @@ class MainActivity : AppCompatActivity() {
             } catch (_: Exception) {}
         }
 
-        findViewById<Button>(R.id.btn_capture_wifi).setOnClickListener {
+        view.findViewById<Button>(R.id.btn_capture_wifi).setOnClickListener {
             try {
                 val wm = applicationContext.getSystemService(WIFI_SERVICE) as? WifiManager
                 if (wm == null) {
@@ -499,7 +499,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        findViewById<Button>(R.id.btn_gen_bssid).setOnClickListener {
+        view.findViewById<Button>(R.id.btn_gen_bssid).setOnClickListener {
             etBssid.setText(generateRandomBssid())
         }
 
