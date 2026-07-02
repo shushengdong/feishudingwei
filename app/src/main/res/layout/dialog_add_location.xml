@@ -8,7 +8,7 @@
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="位置名称（如：公司、家）">
+        android:hint="Location Name">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_name"
@@ -28,7 +28,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="纬度"
+            android:hint="Latitude"
             android:layout_marginEnd="4dp">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -43,7 +43,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="经度"
+            android:hint="Longitude"
             android:layout_marginStart="4dp">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -67,7 +67,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="从地图选择位置"
+            android:text="Select from Map"
             android:textSize="13sp"
             android:textColor="#2196F3"
             android:clickable="true"

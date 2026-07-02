@@ -8,7 +8,7 @@
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="WiFi SSID（名称）">
+        android:hint="WiFi SSID">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_wifi_ssid"
@@ -21,7 +21,7 @@
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="BSSID（MAC地址）"
+        android:hint="BSSID (MAC)"
         android:layout_marginTop="12dp">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -43,7 +43,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="捕获当前WiFi"
+            android:text="Capture WiFi"
             android:layout_marginEnd="6dp" />
 
         <Button
@@ -51,14 +51,14 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="随机生成BSSID"
+            android:text="Random BSSID"
             android:layout_marginStart="6dp" />
     </LinearLayout>
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="连接WiFi后点击捕获，用于对抗打卡App的WiFi列表检测"
+        android:text="Connect WiFi first then capture, for anti-detection"
         android:textSize="11sp"
         android:textColor="#888"
         android:layout_marginTop="8dp" />
