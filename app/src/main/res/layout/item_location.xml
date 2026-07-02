@@ -20,7 +20,7 @@
             android:id="@+id/tv_loc_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="公司"
+            android:text="Location"
             android:textSize="15sp"
             android:textStyle="bold"
             android:textColor="#333" />
@@ -29,7 +29,7 @@
             android:id="@+id/tv_loc_coords"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="39.904200, 116.407396"
+            android:text="0.0, 0.0"
             android:textSize="12sp"
             android:textColor="#888"
             android:layout_marginTop="2dp" />
@@ -38,7 +38,7 @@
             android:id="@+id/tv_loc_target_app"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="�?飞书"
+            android:text="Target: N/A"
             android:textSize="11sp"
             android:textColor="#4CAF50"
             android:visibility="gone"
@@ -61,15 +61,14 @@
         android:layout_height="36dp"
         android:src="@android:drawable/ic_menu_close_clear_cancel"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="删除"
+        android:contentDescription="Delete"
         android:layout_marginEnd="4dp" />
 
     <Button
         android:id="@+id/btn_apply_loc"
         android:layout_width="wrap_content"
         android:layout_height="36dp"
-        android:text="应用"
-        android:textSize="12sp"
-        android:backgroundTint="#E0E0E0" />
+        android:text="Apply"
+        android:textSize="12sp" />
 
 </LinearLayout>

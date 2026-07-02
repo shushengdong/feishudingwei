@@ -6,17 +6,17 @@
     android:padding="16dp"
     android:background="#F5F5F5">
 
-    <!-- 标题（长�?次进入开发者模式） -->
+    <!-- Title -->
     <TextView
         android:id="@+id/tv_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="定位修改和运�?
+        android:text="Location Mod"
         android:textSize="22sp"
         android:textStyle="bold"
         android:layout_marginBottom="8dp" />
 
-    <!-- 当前GPS位置 -->
+    <!-- Current GPS -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -30,7 +30,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="当前位置"
+            android:text="Current"
             android:textSize="13sp"
             android:textColor="#666" />
 
@@ -38,12 +38,12 @@
             android:id="@+id/tv_current_coords"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="等待定位..."
+            android:text="Waiting..."
             android:textSize="13sp"
             android:textColor="#333" />
     </LinearLayout>
 
-    <!-- 模拟状�?-->
+    <!-- Mock Status -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -58,7 +58,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="�?未启�?
+            android:text="Not started"
             android:textSize="14sp"
             android:textStyle="bold" />
 
@@ -66,23 +66,21 @@
             android:id="@+id/btn_stop_mock"
             android:layout_width="wrap_content"
             android:layout_height="36dp"
-            android:text="停止"
+            android:text="Stop"
             android:textSize="12sp"
             android:enabled="false"
-            android:layout_marginStart="8dp"
-            android:backgroundTint="#E0E0E0" />
+            android:layout_marginStart="8dp" />
 
         <Button
             android:id="@+id/btn_map_picker"
             android:layout_width="wrap_content"
             android:layout_height="36dp"
-            android:text="地图选点"
+            android:text="Map"
             android:textSize="12sp"
-            android:layout_marginStart="4dp"
-            android:backgroundTint="#E0E0E0" />
+            android:layout_marginStart="4dp" />
     </LinearLayout>
 
-    <!-- 目标App选择 -->
+    <!-- Target App -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -95,7 +93,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="目标App:"
+            android:text="Target:"
             android:textSize="13sp"
             android:textColor="#666"
             android:layout_marginEnd="8dp" />
@@ -105,7 +103,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="未选择"
+            android:text="None"
             android:textSize="13sp"
             android:textColor="#999" />
 
@@ -113,12 +111,11 @@
             android:id="@+id/btn_select_app"
             android:layout_width="wrap_content"
             android:layout_height="32dp"
-            android:text="选择App"
-            android:textSize="11sp"
-            android:backgroundTint="#E0E0E0" />
+            android:text="Select"
+            android:textSize="11sp" />
     </LinearLayout>
 
-    <!-- 捕获 + WiFi按钮 -->
+    <!-- Capture + WiFi -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -131,7 +128,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="捕获当前位置"
+            android:text="Capture"
             android:layout_marginEnd="4dp" />
 
         <Button
@@ -139,11 +136,19 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="WiFi配置"
+            android:text="WiFi"
+            android:layout_marginStart="4dp" />
+
+        <Button
+            android:id="@+id/btn_guide"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Guide"
             android:layout_marginStart="4dp" />
     </LinearLayout>
 
-    <!-- WiFi/基站信息�?-->
+    <!-- Environment Info Bar -->
     <LinearLayout
         android:id="@+id/ll_env_info"
         android:layout_width="match_parent"
@@ -159,12 +164,12 @@
             android:id="@+id/tv_env_info"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="环境: 未设�?
+            android:text=""
             android:textSize="11sp"
             android:textColor="#2E7D32" />
     </LinearLayout>
 
-    <!-- 保存列表标题 -->
+    <!-- Saved Locations Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -177,7 +182,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="已保存的位置"
+            android:text="Saved Locations"
             android:textSize="15sp"
             android:textStyle="bold" />
 
@@ -185,7 +190,7 @@
             android:id="@+id/tv_setup_guide"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="开发者设�?
+            android:text="Dev Options"
             android:textSize="11sp"
             android:textColor="#2196F3"
             android:clickable="true"
@@ -193,21 +198,11 @@
             android:padding="4dp" />
     </LinearLayout>
 
-    <!-- 位置列表 -->
+    <!-- Location List -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_locations"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />
-
-    <!-- 反检测提�?-->
-    <TextView
-        android:id="@+id/tv_anti_detect"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text=""
-        android:textSize="11sp"
-        android:textColor="#888"
-        android:layout_marginTop="4dp" />
 
 </LinearLayout>
