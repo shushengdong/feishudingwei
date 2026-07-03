@@ -9,7 +9,7 @@ import java.io.File
  * Runs inside the Xposed module (target app process).
  */
 object ConfigLoader {
-    private const val CONFIG_PATH = "/sdcard/location_mod/config.json"
+    const val CONFIG_PATH = "/sdcard/location_mod/config.json"
     private val gson: Gson = GsonBuilder().setPrettyPrinting().create()
 
     @Volatile

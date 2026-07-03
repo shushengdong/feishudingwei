@@ -215,4 +215,70 @@ class CoordinatesEngine(private val config: MockConfig) {
         val time: Long,
         val elapsedNanos: Long
     )
+
+    /**
+     * Current frame snapshot — read by all hook modules.
+     * All values are consistent within one tick.
+     */
+    data class FrameSnapshot(
+        val jitteredLat: Double,
+        val jitteredLng: Double,
+        val gpsAccuracy: Float,
+        val networkAccuracy: Float,
+        val passiveAccuracy: Float,
+        val fusedAccuracy: Float,
+        val altitude: Double,
+        val speed: Float,
+        val bearing: Float,
+        val timestampMs: Long,
+        val networkOffsetLat: Double,
+        val networkOffsetLng: Double,
+        val passiveOffsetLat: Double,
+        val passiveOffsetLng: Double,
+        val frameIndex: Long,
+        val frameSeed: Long
+    )
+
+    /** Thread-safe current frame for hook consumption */
+    val currentFrame: FrameSnapshot
+        get() {
+            val seed = deterministicSeed()
+            val rng = kotlin.random.Random(seed)
+            return FrameSnapshot(
+                jitteredLat = currentLat,
+                jitteredLng = currentLng,
+                gpsAccuracy = currentAccuracy,
+                networkAccuracy = SensorMath.realisticAccuracy(15.0..80.0, seed xor 0xBEEF),
+                passiveAccuracy = SensorMath.realisticAccuracy(30.0..120.0, seed xor 0xCAFE),
+                fusedAccuracy = currentAccuracy * 1.2f,
+                altitude = currentAltitude,
+                speed = currentSpeed,
+                bearing = currentBearing,
+                timestampMs = baseTimestampMs,
+                networkOffsetLat = NoiseGenerator.gaussian1D(seed xor 0xAAAA, 0.0003),
+                networkOffsetLng = NoiseGenerator.gaussian1D(seed xor 0xBBBB, 0.0003),
+                passiveOffsetLat = NoiseGenerator.gaussian1D(seed xor 0xCCCC, 0.0006),
+                passiveOffsetLng = NoiseGenerator.gaussian1D(seed xor 0xDDDD, 0.0006),
+                frameIndex = frameIndex,
+                frameSeed = seed
+            )
+        }
+
+    /** Snapshot of previous frame (for gyroscope delta calculations) */
+    @Volatile var previousFrame: FrameSnapshot? = null
+
+    companion object {
+        @Volatile
+        private var instance: CoordinatesEngine? = null
+
+        fun initialize(resolved: ConfigLoader.ResolvedConfig): CoordinatesEngine {
+            val config = ConfigLoader.load() ?:
+                throw IllegalStateException("Config not found at ${ConfigLoader.CONFIG_PATH}")
+            val engine = CoordinatesEngine(config)
+            instance = engine
+            return engine
+        }
+
+        fun getInstance(): CoordinatesEngine? = instance
+    }
 }
