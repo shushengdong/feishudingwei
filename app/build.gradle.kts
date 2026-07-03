@@ -32,7 +32,8 @@ android {
 
 dependencies {
     // Xposed API - provided by LSPosed at runtime, compileOnly
-    compileOnly("com.github.rovo89:XposedBridge:api-82")
+    // Downloaded by CI workflow from Aliyun Maven mirror
+    compileOnly(files("libs/api-82.jar"))
 
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
