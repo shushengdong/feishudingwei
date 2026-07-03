@@ -482,7 +482,7 @@ LSPosed: ${if (status.checks.lsposedInstalled) "\u2705" else "\u274C"}
         }.joinToString("\n\n")
 
         var actionLabel = "下一步"
-        var action: (() -> Unit)? = null
+        var action: ((Context) -> Unit)? = null
 
         for (step in status.steps) {
             if (step.status != RootManager.StepStatus.COMPLETED) {
@@ -498,7 +498,8 @@ LSPosed: ${if (status.checks.lsposedInstalled) "\u2705" else "\u274C"}
             .setNegativeButton("关闭", null)
 
         if (action != null) {
-            dialog.setPositiveButton(actionLabel) { _, _ -> action() }
+            val ctx = this
+            dialog.setPositiveButton(actionLabel) { _, _ -> action!!(ctx) }
         }
 
         if (!status.checks.magiskInstalled && status.phase >= RootManager.RootPhase.BOOTLOADER_UNLOCKED) {

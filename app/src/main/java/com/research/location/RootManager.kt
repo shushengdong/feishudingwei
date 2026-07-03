@@ -185,7 +185,7 @@ object RootManager {
                                "Android: ${Build.VERSION.RELEASE}\n" +
                                "CPU: ${Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64-v8a"}\n\n" +
                                "BL状态: ${getBootloaderStatus()}"
-                    // Show in toast since we're in a lambda
+                    android.widget.Toast.makeText(it, info, android.widget.Toast.LENGTH_LONG).show()
                 }
             ),
             RootStep(
