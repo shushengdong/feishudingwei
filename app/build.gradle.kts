@@ -31,9 +31,7 @@ android {
 }
 
 dependencies {
-    // Xposed API - provided by LSPosed at runtime, compileOnly
-    // Downloaded by CI workflow from Aliyun Maven mirror
-    compileOnly(files("libs/api-82.jar"))
+    // Xposed stubs compiled from source, replaced by LSPosed at runtime
 
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
