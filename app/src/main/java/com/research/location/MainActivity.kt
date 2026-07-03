@@ -292,10 +292,23 @@ class MainActivity : AppCompatActivity() {
             llEnvInfo.visibility = View.VISIBLE
         }
 
-        // Kill and restart target app to pick up new config
-        Handler(Looper.getMainLooper()).postDelayed({
-            restartTargetApp(pkg, loc.targetAppName)
-        }, 500)
+        // Async IP check before launch
+        val cityName = ConfigWriter.readConfig()?.location?.city ?: ""
+        Thread {
+            val result = RootManager.checkIpLocation(cityName, loc.lat, loc.lng)
+            if (result.warning != null) {
+                runOnUiThread {
+                    MaterialAlertDialogBuilder(this)
+                        .setTitle("\u26A0\uFE0F IP位置警告")
+                        .setMessage("${result.warning}\n\nIP归属: ${result.ipCity}\nGPS目标: ${result.gpsCity}\n距离: ${String.format("%.0f", result.distanceKm)}km\n\n建议连接${result.gpsCity}的VPN后再打卡")
+                        .setPositiveButton("仍然启动") { _, _ -> restartTargetApp(pkg, loc.targetAppName) }
+                        .setNegativeButton("取消", null)
+                        .show()
+                }
+            } else {
+                runOnUiThread { restartTargetApp(pkg, loc.targetAppName) }
+            }
+        }.start()
     }
 
     private fun restartTargetApp(pkg: String, appName: String) {
@@ -321,14 +334,32 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun disableMock() {
+        val config = ConfigWriter.readConfig()
+        val targetPkg = config?.targetPackages?.firstOrNull()
         val success = ConfigWriter.disableConfig()
         updateMockStatus()
         llEnvInfo.visibility = View.GONE
-        if (success) {
-            Toast.makeText(this, "配置已禁用。重启飞书恢复正常定位。", Toast.LENGTH_LONG).show()
+
+        // Force kill target app to restore normal location immediately
+        if (success && targetPkg != null) {
+            killApp(targetPkg)
+            Toast.makeText(this, "已恢复! 飞书已停止, 下次启动将使用真实定位。", Toast.LENGTH_LONG).show()
+        } else if (success) {
+            Toast.makeText(this, "配置已禁用。重启目标App恢复正常定位。", Toast.LENGTH_LONG).show()
         } else {
             Toast.makeText(this, "配置文件不存在或已禁用", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun killApp(pkg: String) {
+        try {
+            val am = getSystemService(ACTIVITY_SERVICE) as android.app.ActivityManager
+            am.killBackgroundProcesses(pkg)
+        } catch (_: Exception) {}
+        // Also try force-stop via shell (works without root on some devices)
+        try {
+            Runtime.getRuntime().exec(arrayOf("am", "force-stop", pkg))
+        } catch (_: Exception) {}
     }
 
     private fun updateMockStatus() {

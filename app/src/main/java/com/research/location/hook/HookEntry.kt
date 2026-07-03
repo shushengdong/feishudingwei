@@ -27,6 +27,7 @@ class HookEntry : IXposedHookLoadPackage {
         CellHook(),
         GnssHook(),
         SensorHook(),
+        GeocoderHook(),
         NetworkHook(),
         SystemHook(),
         SelfHideHook()

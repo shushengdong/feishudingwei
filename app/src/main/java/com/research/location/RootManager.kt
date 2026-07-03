@@ -292,6 +292,76 @@ object RootManager {
         }
     }
 
+    // ========== IP LOCATION CHECK ==========
+
+    /**
+     * Check if current IP location matches GPS location.
+     * Calls ip-api.com (free, no key needed, 45 req/min limit).
+     * Returns null if network unavailable.
+     */
+    fun checkIpLocation(gpsCity: String, gpsLat: Double, gpsLng: Double): IpCheckResult {
+        if (gpsCity.isBlank()) return IpCheckResult.UNKNOWN
+        return try {
+            val url = java.net.URL("http://ip-api.com/json?fields=city,countryCode,lat,lon")
+            val conn = url.openConnection() as java.net.HttpURLConnection
+            conn.connectTimeout = 5000
+            conn.readTimeout = 5000
+            val json = conn.inputStream.bufferedReader().readText()
+            conn.disconnect()
+
+            // Parse minimal JSON (avoid Gson dependency in static context)
+            val ipCity = extractJsonValue(json, "city")
+            val ipCountry = extractJsonValue(json, "countryCode")
+            val ipLat = extractJsonValue(json, "lat").toDoubleOrNull() ?: 0.0
+            val ipLng = extractJsonValue(json, "lon").toDoubleOrNull() ?: 0.0
+
+            if (ipCity.isBlank() || ipCountry != "CN") {
+                return IpCheckResult(error = "IP查询失败或非国内IP")
+            }
+
+            val match = ipCity.contains(gpsCity.take(2)) ||
+                        gpsCity.contains(ipCity.take(2)) ||
+                        distanceKm(ipLat, ipLng, gpsLat, gpsLng) < 50.0
+
+            IpCheckResult(
+                ipCity = ipCity,
+                gpsCity = gpsCity,
+                match = match,
+                distanceKm = distanceKm(ipLat, ipLng, gpsLat, gpsLng),
+                warning = if (!match) "⚠️ IP归属地($ipCity)与GPS目标($gpsCity)不一致! 建议连接${gpsCity}VPN" else null
+            )
+        } catch (_: Exception) {
+            IpCheckResult(error = "网络不可用, 跳过IP检测")
+        }
+    }
+
+    data class IpCheckResult(
+        val ipCity: String = "",
+        val gpsCity: String = "",
+        val match: Boolean = false,
+        val distanceKm: Double = 0.0,
+        val warning: String? = null,
+        val error: String? = null
+    ) {
+        companion object {
+            val UNKNOWN = IpCheckResult(error = "未检测")
+        }
+    }
+
+    private fun extractJsonValue(json: String, key: String): String {
+        val pattern = """"$key"\s*:\s*"?([^",}\s]+)"?""".toRegex()
+        return pattern.find(json)?.groupValues?.get(1)?.trim()?.removeSurrounding("\"") ?: ""
+    }
+
+    private fun distanceKm(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLng = Math.toRadians(lng2 - lng1)
+        val a = kotlin.math.sin(dLat / 2).pow(2) +
+                kotlin.math.cos(Math.toRadians(lat1)) * kotlin.math.cos(Math.toRadians(lat2)) *
+                kotlin.math.sin(dLng / 2).pow(2)
+        return 6371.0 * 2 * kotlin.math.atan2(kotlin.math.sqrt(a), kotlin.math.sqrt(1 - a))
+    }
+
     // ========== SU ==========
 
     fun isRootAvailable(): Boolean {
