@@ -29,11 +29,10 @@ jobs:
         id: build
         run: |
           gradle wrapper --gradle-version 8.5
-          set +e
-          ./gradlew assembleDebug 2>&1 | tee build-output.txt
+          ./gradlew assembleDebug 2>&1 | tee /tmp/build.log
           EXIT=${PIPESTATUS[0]}
-          # Extract error lines as workflow annotations
-          grep -iE "error:" build-output.txt | head -20 | while read line; do
+          # Extract all error/warning/failure lines
+          grep -iE "error|fail|unresolved|cannot find symbol|expect" /tmp/build.log | head -30 | while IFS= read -r line; do
             echo "::error::${line}"
           done
           exit $EXIT
