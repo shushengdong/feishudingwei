@@ -240,7 +240,7 @@ class CoordinatesEngine(private val config: MockConfig) {
     )
 
     /**
-     * Current frame snapshot â€” read by all hook modules.
+     * Current frame snapshot â€?read by all hook modules.
      * All values are consistent within one tick.
      */
     data class FrameSnapshot(
@@ -266,7 +266,7 @@ class CoordinatesEngine(private val config: MockConfig) {
     val currentFrame: FrameSnapshot
         get() {
             val seed = deterministicSeed()
-            return FrameSnapshot(
+            val snap = FrameSnapshot(
                 jitteredLat = currentLat,
                 jitteredLng = currentLng,
                 gpsAccuracy = currentAccuracy,
@@ -284,6 +284,8 @@ class CoordinatesEngine(private val config: MockConfig) {
                 frameIndex = frameIndex,
                 frameSeed = seed
             )
+            previousFrame = snap
+            return snap
         }
 
     /** Snapshot of previous frame (for gyroscope delta calculations) */
