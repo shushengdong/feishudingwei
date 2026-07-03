@@ -54,7 +54,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvTitle: TextView
     private lateinit var tvCurrentCoords: TextView
     private lateinit var tvMockStatus: TextView
-    private lateinit var tvConfigInfo: TextView
     private lateinit var tvSelectedApp: TextView
     private lateinit var tvEnvInfo: TextView
     private lateinit var llEnvInfo: LinearLayout
@@ -122,7 +121,6 @@ class MainActivity : AppCompatActivity() {
         tvTitle = findViewById(R.id.tv_title)
         tvCurrentCoords = findViewById(R.id.tv_current_coords)
         tvMockStatus = findViewById(R.id.tv_mock_status)
-        tvConfigInfo = findViewById(R.id.tv_env_info)  // reuse env info for config status
         tvSelectedApp = findViewById(R.id.tv_selected_app)
         tvEnvInfo = findViewById(R.id.tv_env_info)
         llEnvInfo = findViewById(R.id.ll_env_info)
