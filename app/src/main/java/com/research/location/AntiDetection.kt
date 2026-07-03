@@ -3,8 +3,6 @@ package com.research.location
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
-import android.location.LocationManager
-import android.os.Build
 import android.provider.Settings
 import kotlin.math.*
 import kotlin.random.Random

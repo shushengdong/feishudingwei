@@ -1,6 +1,5 @@
 package com.research.location
 
-import android.content.Context
 import com.google.gson.GsonBuilder
 import com.research.location.model.SavedLocation
 import java.io.File
