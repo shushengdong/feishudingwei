@@ -551,6 +551,30 @@ LSPosed: ${if (status.checks.lsposedInstalled) "\u2705" else "\u274C"}
         dialog.show()
     }
 
+    // ========== Schedule ==========
+
+    private fun showScheduleDialog() {
+        val (start, end) = ScheduledMockManager.getSchedule(this)
+        val enabled = ScheduledMockManager.isEnabled(this)
+        val msg = "当前: ${if (enabled) "已启用" else "已禁用"}\n开始: $start\n结束: $end\n\n设置定时后, App会在指定时间自动开启/关闭Mock。"
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("\u23F0 定时Mock")
+            .setMessage(msg)
+            .setPositiveButton(if (enabled) "关闭定时" else "开启定时") { _, _ ->
+                if (enabled) {
+                    ScheduledMockManager.setSchedule(this, false, 0, 0, 0, 0)
+                    Toast.makeText(this, "定时已关闭", Toast.LENGTH_SHORT).show()
+                } else {
+                    // Default: 08:55 enable, 09:05 disable (typical check-in window)
+                    ScheduledMockManager.setSchedule(this, true, 8, 55, 9, 5)
+                    Toast.makeText(this, "定时已开启: 08:55自动Mock, 09:05自动恢复", Toast.LENGTH_LONG).show()
+                }
+            }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+
     // ========== App选择器 ==========
 
     private fun loadInstalledApps() {

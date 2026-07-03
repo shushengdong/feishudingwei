@@ -74,12 +74,11 @@ object ScheduledMockManager {
 
     private fun cancelAlarms(ctx: Context) {
         val am = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         val enablePending = PendingIntent.getBroadcast(ctx, REQUEST_ENABLE,
-            Intent(ctx, ScheduleReceiver::class.java).apply { action = "ENABLE_MOCK" },
-            PendingIntent.FLAG_IMMUTABLE)
+            Intent(ctx, ScheduleReceiver::class.java).apply { action = "ENABLE_MOCK" }, flags)
         val disablePending = PendingIntent.getBroadcast(ctx, REQUEST_DISABLE,
-            Intent(ctx, ScheduleReceiver::class.java).apply { action = "DISABLE_MOCK" },
-            PendingIntent.FLAG_IMMUTABLE)
+            Intent(ctx, ScheduleReceiver::class.java).apply { action = "DISABLE_MOCK" }, flags)
         am.cancel(enablePending)
         am.cancel(disablePending)
     }
