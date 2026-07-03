@@ -16,6 +16,57 @@
         android:textStyle="bold"
         android:layout_marginBottom="8dp" />
 
+    <!-- Root Status Card -->
+    <LinearLayout
+        android:id="@+id/ll_root_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="10dp"
+        android:background="#FFF3E0"
+        android:layout_marginBottom="6dp">
+
+        <TextView
+            android:id="@+id/tv_root_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="\uD83D\uDD12"
+            android:textSize="20sp"
+            android:layout_marginEnd="8dp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_root_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Root\u72B6\u6001"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#E65100" />
+
+            <TextView
+                android:id="@+id/tv_root_subtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="\u68C0\u6D4B\u4E2D..."
+                android:textSize="11sp"
+                android:textColor="#BF360C" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btn_root_action"
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:text="\u5F15\u5BFC"
+            android:textSize="11sp" />
+    </LinearLayout>
+
     <!-- Current GPS -->
     <LinearLayout
         android:layout_width="match_parent"
@@ -148,7 +199,7 @@
             android:layout_marginHorizontal="2dp" />
 
         <Button
-            android:id="@+id/btn_diag"
+            android:id="@+id/btn_diagnostics"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"

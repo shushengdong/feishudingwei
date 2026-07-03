@@ -2,7 +2,11 @@ package com.research.location
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.DownloadManager
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.location.Location
 import android.net.wifi.WifiManager
@@ -58,6 +62,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnStopMock: Button
     private lateinit var btnDiagnostics: Button
 
+    // -- Root状态 --
+    private lateinit var llRootStatus: LinearLayout
+    private lateinit var tvRootIcon: TextView
+    private lateinit var tvRootTitle: TextView
+    private lateinit var tvRootSubtitle: TextView
+    private lateinit var btnRootAction: Button
+    private var magiskDownloadId: Long = -1
+
     // -- 权限 --
     private val permLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -93,6 +105,10 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // Register download receiver for Magisk APK
+        registerReceiver(downloadReceiver,
+            IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
 
         client = LocationServices.getFusedLocationProviderClient(this)
         initViews()
@@ -132,10 +148,20 @@ class MainActivity : AppCompatActivity() {
         btnDiagnostics.setOnClickListener { showDiagnostics() }
         findViewById<Button>(R.id.btn_guide).setOnClickListener { showUsageGuide() }
 
-        // Hide old setup guide text - no longer needed (no developer options required)
+        // Root status card
+        llRootStatus = findViewById(R.id.ll_root_status)
+        tvRootIcon = findViewById(R.id.tv_root_icon)
+        tvRootTitle = findViewById(R.id.tv_root_title)
+        tvRootSubtitle = findViewById(R.id.tv_root_subtitle)
+        btnRootAction = findViewById(R.id.btn_root_action)
+        btnRootAction.setOnClickListener { showRootWizard() }
+        llRootStatus.setOnClickListener { showRootWizard() }
+
+        // Hide old setup guide
         findViewById<TextView>(R.id.tv_setup_guide)?.visibility = View.GONE
 
         updateMockStatus()
+        updateRootStatus()
     }
 
     private fun startLocationUpdates() {
@@ -169,11 +195,28 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         if (hasLocationPermission()) startLocationUpdates()
         updateMockStatus()
+        updateRootStatus()
     }
 
     override fun onPause() {
         super.onPause()
         try { client.removeLocationUpdates(locationCallback) } catch (_: Exception) {}
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        try { unregisterReceiver(downloadReceiver) } catch (_: Exception) {}
+    }
+
+    // Download complete receiver for Magisk APK
+    private val downloadReceiver = object : BroadcastReceiver() {
+        override fun onReceive(ctx: Context?, intent: Intent?) {
+            val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1) ?: return
+            if (id == magiskDownloadId) {
+                Toast.makeText(this@MainActivity, "Magisk下载完成！请在通知栏点击安装", Toast.LENGTH_LONG).show()
+                magiskDownloadId = -1
+            }
+        }
     }
 
     private fun hasLocationPermission(): Boolean {
@@ -349,6 +392,129 @@ class MainActivity : AppCompatActivity() {
             .setMessage(msg)
             .setPositiveButton("确定", null)
             .show()
+    }
+
+    // ========== Root Management ==========
+
+    private fun updateRootStatus() {
+        val status = RootManager.getDeviceRootStatus(this)
+        val bgColor: Int
+        val icon: String
+
+        when (status.phase) {
+            RootManager.RootPhase.READY -> {
+                icon = "\u2705"
+                tvRootTitle.text = "Root就绪 — Magisk+LSPosed已安装"
+                tvRootSubtitle.text = "Xposed模块可激活"
+                bgColor = 0xFFE8F5E9.toInt()
+                btnRootAction.text = "验证"
+            }
+            RootManager.RootPhase.BOOTLOADER_UNLOCKED -> {
+                icon = "\u26A0\uFE0F"
+                tvRootTitle.text = "BL已解锁 — 可刷入Magisk"
+                tvRootSubtitle.text = "步骤${status.currentStep}/${status.totalSteps}: ${status.currentStepDescription}"
+                bgColor = 0xFFFFF8E1.toInt()
+                btnRootAction.text = "引导"
+            }
+            RootManager.RootPhase.OEM_UNLOCK_ALLOWED -> {
+                icon = "\uD83D\uDD13"
+                tvRootTitle.text = "OEM解锁已开启 — 可解锁BL"
+                tvRootSubtitle.text = "步骤${status.currentStep}/${status.totalSteps}: ${status.currentStepDescription}"
+                bgColor = 0xFFFFF3E0.toInt()
+                btnRootAction.text = "引导"
+            }
+            RootManager.RootPhase.DEVELOPER_ENABLED -> {
+                icon = "\uD83D\uDD27"
+                tvRootTitle.text = "开发者选项已开启"
+                tvRootSubtitle.text = "步骤${status.currentStep}/${status.totalSteps}: ${status.currentStepDescription}"
+                bgColor = 0xFFFFF3E0.toInt()
+                btnRootAction.text = "引导"
+            }
+            RootManager.RootPhase.NONE -> {
+                icon = "\uD83D\uDD12"
+                tvRootTitle.text = "Root未完成 — 需要解锁+刷入Magisk"
+                tvRootSubtitle.text = "步骤${status.currentStep}/${status.totalSteps}: ${status.currentStepDescription}"
+                bgColor = 0xFFFFF3E0.toInt()
+                btnRootAction.text = "开始"
+            }
+        }
+
+        tvRootIcon.text = icon
+        llRootStatus.setBackgroundColor(bgColor)
+    }
+
+    private fun showRootWizard() {
+        val status = RootManager.getDeviceRootStatus(this)
+
+        if (status.phase == RootManager.RootPhase.READY) {
+            MaterialAlertDialogBuilder(this)
+                .setTitle("\u2705 Root已完成")
+                .setMessage("""
+BL状态: ${RootManager.getBootloaderStatus()}
+Magisk: ${if (status.checks.magiskInstalled) "\u2705" else "\u274C"}
+LSPosed: ${if (status.checks.lsposedInstalled) "\u2705" else "\u274C"}
+超级用户: ${if (status.checks.hasSuBinary) "\u2705" else "\u274C"}
+
+下一步:
+1. 在LSPosed中激活本模块, 作用域选飞书
+2. 写入配置 → 重启飞书
+                """.trimIndent())
+                .setPositiveButton("打开LSPosed") { _, _ ->
+                    try {
+                        startActivity(packageManager.getLaunchIntentForPackage("org.lsposed.manager"))
+                    } catch (_: Exception) {
+                        Toast.makeText(this, "LSPosed未安装", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                .setNeutralButton("打开Magisk") { _, _ ->
+                    try {
+                        startActivity(packageManager.getLaunchIntentForPackage("com.topjohnwu.magisk"))
+                    } catch (_: Exception) {
+                        Toast.makeText(this, "Magisk未安装", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                .setNegativeButton("关闭", null)
+                .show()
+            return
+        }
+
+        val steps = status.steps.map { step ->
+            val done = step.status == RootManager.StepStatus.COMPLETED
+            "${if (done) "\u2705" else if (step.status == RootManager.StepStatus.IN_PROGRESS) "\uD83D\uDD38" else "\u25CB"} ${step.title}\n   ${step.description}"
+        }.joinToString("\n\n")
+
+        var actionLabel = "下一步"
+        var action: (() -> Unit)? = null
+
+        for (step in status.steps) {
+            if (step.status != RootManager.StepStatus.COMPLETED) {
+                actionLabel = step.actionLabel
+                action = step.action
+                break
+            }
+        }
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle("\uD83D\uDD13 Root引导 (${status.currentStep}/${status.totalSteps})")
+            .setMessage(steps)
+            .setNegativeButton("关闭", null)
+
+        if (action != null) {
+            dialog.setPositiveButton(actionLabel) { _, _ -> action() }
+        }
+
+        if (!status.checks.magiskInstalled && status.phase >= RootManager.RootPhase.BOOTLOADER_UNLOCKED) {
+            dialog.setNeutralButton("下载Magisk") { _, _ ->
+                magiskDownloadId = RootManager.downloadMagiskApk(this)
+                if (magiskDownloadId != -1L) {
+                    Toast.makeText(this, "正在下载Magisk...", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this, "下载失败, 请检查网络", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        dialog.show()
     }
 
     // ========== App选择器 ==========
