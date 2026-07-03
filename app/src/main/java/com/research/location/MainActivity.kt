@@ -145,6 +145,7 @@ class MainActivity : AppCompatActivity() {
         btnStopMock.setOnClickListener { disableMock() }
         btnDiagnostics.setOnClickListener { showDiagnostics() }
         findViewById<Button>(R.id.btn_guide).setOnClickListener { showUsageGuide() }
+        findViewById<Button>(R.id.btn_schedule).setOnClickListener { showScheduleDialog() }
 
         // Root status card
         llRootStatus = findViewById(R.id.ll_root_status)
