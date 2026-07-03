@@ -365,15 +365,19 @@ class MainActivity : AppCompatActivity() {
     private fun updateMockStatus() {
         val configValid = ConfigWriter.isConfigValid()
         val config = ConfigWriter.readConfig()
+        val hookStatus = ConfigWriter.readHookStatus()
 
         if (configValid && config != null) {
             val targetInfo = config.targetPackages.firstOrNull()?.let { pkg ->
                 installedApps.firstOrNull { it.packageName == pkg }?.appName ?: pkg
             } ?: "未指定"
-            tvMockStatus.text = "\u25CF 已配置 | 目标: $targetInfo"
+            val hookInfo = if (hookStatus?.isRecent() == true) {
+                " | Hook: \u2705${hookStatus.hooksLoaded}/${hookStatus.totalHooks}"
+            } else ""
+            tvMockStatus.text = "\u25CF 已配置 | 目标: $targetInfo$hookInfo"
             tvMockStatus.setTextColor(0xFF4CAF50.toInt())
             btnStopMock.isEnabled = true
-            btnStopMock.text = "禁用配置"
+            btnStopMock.text = "禁用+恢复"
         } else if (config != null && !config.enabled) {
             tvMockStatus.text = "\u25CB 已禁用"
             tvMockStatus.setTextColor(0xFFFFA000.toInt())

@@ -152,4 +152,33 @@ object ConfigWriter {
         "15" -> "中国广电"
         else -> "中国移动"
     }
+
+    // ========== HOOK STATUS ==========
+
+    /**
+     * Read hook activation status written by the Xposed module.
+     * Returns null if no status file or hooks never activated.
+     */
+    fun readHookStatus(): HookStatus? {
+        return try {
+            val f = java.io.File("$CONFIG_DIR/hook_status.json")
+            if (!f.exists()) return null
+            val raw = f.readText()
+            // Minimal JSON parse (avoid Gson for this tiny file)
+            val active = raw.contains(""""active":true""")
+            val hooks = Regex(""""hooks":(\d+)""").find(raw)?.groupValues?.get(1)?.toIntOrNull() ?: 0
+            val total = Regex(""""total":(\d+)""").find(raw)?.groupValues?.get(1)?.toIntOrNull() ?: 10
+            val time = Regex(""""time":(\d+)""").find(raw)?.groupValues?.get(1)?.toLongOrNull() ?: 0L
+            HookStatus(active, hooks, total, time)
+        } catch (_: Exception) { null }
+    }
+
+    data class HookStatus(
+        val active: Boolean,
+        val hooksLoaded: Int,
+        val totalHooks: Int,
+        val timestamp: Long
+    ) {
+        fun isRecent(): Boolean = active && (System.currentTimeMillis() - timestamp) < 120_000 // 2 min
+    }
 }
