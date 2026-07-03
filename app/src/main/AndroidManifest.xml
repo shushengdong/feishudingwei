@@ -2,22 +2,57 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- 定位权限 -->
+    <!-- Xposed module declaration -->
+    <!-- The xposed_init asset declares the entry class -->
+    <application
+        android:allowBackup="true"
+        android:icon="@android:drawable/ic_menu_mylocation"
+        android:label="信号助手"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.LocationResearch"
+        android:usesCleartextTraffic="true"
+        tools:targetApi="34">
+
+        <!-- Xposed module meta-data (informational) -->
+        <meta-data
+            android:name="xposedmodule"
+            android:value="true" />
+        <meta-data
+            android:name="xposeddescription"
+            android:value="Location Modification Module - Requires LSPosed" />
+        <meta-data
+            android:name="xposedminversion"
+            android:value="82" />
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".MapPickerActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize" />
+    </application>
+
+    <!-- 定位权限 (for map picker) -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_MOCK_LOCATION"
-        tools:ignore="MockLocation" />
-
-    <!-- 前台服务 -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
 
     <!-- 网络 -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+
+    <!-- 前台服务（不再需要MockService, 但保留以备后续使用） -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
 
     <!-- 通知 -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -38,35 +73,4 @@
             <data android:scheme="https" />
         </intent>
     </queries>
-
-    <application
-        android:allowBackup="true"
-        android:icon="@android:drawable/ic_menu_mylocation"
-        android:label="定位修改和运用"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.LocationResearch"
-        android:usesCleartextTraffic="true"
-        tools:targetApi="34">
-
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:name=".MapPickerActivity"
-            android:exported="false"
-            android:configChanges="orientation|screenSize" />
-
-        <service
-            android:name=".MockService"
-            android:foregroundServiceType="location"
-            android:exported="false" />
-
-    </application>
-
 </manifest>

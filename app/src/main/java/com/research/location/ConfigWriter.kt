@@ -1,0 +1,155 @@
+package com.research.location
+
+import android.content.Context
+import com.google.gson.GsonBuilder
+import com.research.location.model.SavedLocation
+import java.io.File
+
+/**
+ * Writes the configuration JSON file that the Xposed module reads.
+ *
+ * This is the ONLY communication channel between the management app
+ * and the Xposed module running inside the target app's process.
+ */
+object ConfigWriter {
+    private const val CONFIG_DIR = "/sdcard/location_mod"
+    private const val CONFIG_FILE = "$CONFIG_DIR/config.json"
+
+    private val gson = GsonBuilder().setPrettyPrinting().create()
+
+    /**
+     * Write config from a SavedLocation and target package.
+     */
+    fun writeConfig(
+        location: SavedLocation,
+        targetPackage: String,
+        wifiSsid: String = "",
+        wifiBssid: String = ""
+    ): Boolean {
+        return try {
+            File(CONFIG_DIR).mkdirs()
+
+            val config = hook.MockConfig(
+                version = 3,
+                enabled = true,
+                targetPackages = listOf(targetPackage),
+                location = hook.LocationConfig(
+                    lat = location.lat,
+                    lng = location.lng,
+                    label = location.name,
+                    city = extractCity(location.name),
+                    altitude = estimateAltitude(location.lat)
+                ),
+                behavior = hook.BehaviorConfig(
+                    updateIntervalMs = 2000,
+                    mode = "walking",
+                    gpsJitterMeters = 15.0,
+                    speedRangeMs = listOf(0.0, 1.5),
+                    accuracyRangeM = listOf(3.0, 25.0)
+                ),
+                wifi = hook.WifiConfig(
+                    enabled = true,
+                    primarySsid = wifiSsid.ifEmpty { "Office-WiFi-5G" },
+                    primaryBssid = wifiBssid,
+                    apCount = 6
+                ),
+                cell = hook.CellConfig(
+                    enabled = true,
+                    mcc = location.mcc.ifEmpty { "460" },
+                    mnc = location.mnc.ifEmpty { "00" },
+                    operatorName = mncToOperator(location.mnc),
+                    lac = location.lac.takeIf { it > 0 } ?: 43012
+                ),
+                gnss = hook.GnssConfig(enabled = true),
+                sensor = hook.SensorConfig(enabled = true),
+                network = hook.NetworkConfig(hideVpn = true, fakeWifiConnection = true),
+                system = hook.SystemConfig(
+                    hideDeveloperOptions = true,
+                    hideAdbEnabled = true,
+                    hideMockLocationApp = true,
+                    fakeBuildTags = true
+                ),
+                selfHide = hook.SelfHideConfig(
+                    hideAppFromPackageList = true,
+                    hideRootFiles = true,
+                    interceptRootCommands = true
+                )
+            )
+
+            val json = gson.toJson(config)
+            File(CONFIG_FILE).writeText(json)
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    /**
+     * Read current config (for diagnostics).
+     */
+    fun readConfig(): hook.MockConfig? {
+        return try {
+            val file = File(CONFIG_FILE)
+            if (!file.exists()) return null
+            gson.fromJson(file.readText(), hook.MockConfig::class.java)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    /**
+     * Check if config file exists and is valid.
+     */
+    fun isConfigValid(): Boolean {
+        return try {
+            val config = readConfig()
+            config != null && config.enabled && config.targetPackages.isNotEmpty()
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    /**
+     * Disable the config (stop mocking without deleting the file).
+     */
+    fun disableConfig(): Boolean {
+        return try {
+            val config = readConfig() ?: return false
+            val updated = config.copy(enabled = false)
+            File(CONFIG_FILE).writeText(gson.toJson(updated))
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    fun configFilePath(): String = CONFIG_FILE
+
+    private fun extractCity(name: String): String = when {
+        name.contains("北京") -> "北京"
+        name.contains("上海") -> "上海"
+        name.contains("广州") -> "广州"
+        name.contains("深圳") -> "深圳"
+        name.contains("成都") -> "成都"
+        name.contains("杭州") -> "杭州"
+        name.contains("武汉") -> "武汉"
+        name.contains("南京") -> "南京"
+        else -> ""
+    }
+
+    private fun estimateAltitude(lat: Double): Double = when {
+        lat > 35 -> 50.0   // Northern cities
+        lat > 30 -> 10.0   // Central
+        lat > 25 -> 20.0   // Southern
+        else -> 5.0        // Coastal
+    }
+
+    private fun mncToOperator(mnc: String): String = when (mnc) {
+        "00", "02", "07" -> "中国移动"
+        "01", "06" -> "中国联通"
+        "03", "05", "11" -> "中国电信"
+        "15" -> "中国广电"
+        else -> "中国移动"
+    }
+}
