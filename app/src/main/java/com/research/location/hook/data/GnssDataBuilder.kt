@@ -21,12 +21,15 @@ object GnssDataBuilder {
      * @param seed deterministic seed
      */
     fun buildGnssStatus(
-        satCount: Int,
-        cn0Range: ClosedFloatingPointRange<Double>,
-        constellationMix: Map<String, Int>,
-        seed: Long
+        latDeg: Double = 0.0,
+        lngDeg: Double = 0.0,
+        satelliteCount: ClosedRange<Int> = 8..15,
+        constellationMix: Map<String, Int> = mapOf("GPS" to 35, "BeiDou" to 35),
+        cn0Range: ClosedFloatingPointRange<Double> = 25.0..45.0,
+        seed: Long = 0
     ): GnssStatus? {
         val rng = kotlin.random.Random(seed)
+        val satCount = rng.nextInt(satelliteCount.start, satelliteCount.endInclusive + 1)
 
         return try {
             val builderClass = Class.forName("android.location.GnssStatus\$Builder")
@@ -118,8 +121,14 @@ object GnssDataBuilder {
     /**
      * Build fake GpsStatus (older API, Android < 9).
      */
-    fun buildGpsStatus(satCount: Int, seed: Long): GpsStatus? {
+    fun buildGpsStatus(
+        latDeg: Double = 0.0,
+        lngDeg: Double = 0.0,
+        count: ClosedRange<Int> = 8..15,
+        seed: Long = 0
+    ): GpsStatus? {
         val rng = kotlin.random.Random(seed)
+        val satCount = rng.nextInt(count.start, count.endInclusive + 1)
 
         return try {
             val ctor: Constructor<GpsStatus> = GpsStatus::class.java.getDeclaredConstructor()
