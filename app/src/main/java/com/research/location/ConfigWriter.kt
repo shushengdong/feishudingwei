@@ -124,6 +124,18 @@ object ConfigWriter {
         }
     }
 
+    /** Re-enable a previously disabled config */
+    fun enableConfig(): Boolean {
+        return try {
+            val config = readConfig() ?: return false
+            val updated = config.copy(enabled = true)
+            File(CONFIG_FILE).writeText(gson.toJson(updated))
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
     fun configFilePath(): String = CONFIG_FILE
 
     private fun extractCity(name: String): String = when {

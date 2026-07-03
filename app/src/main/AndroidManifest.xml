@@ -37,6 +37,11 @@
             android:name=".MapPickerActivity"
             android:exported="false"
             android:configChanges="orientation|screenSize" />
+
+        <!-- Scheduled mock receiver -->
+        <receiver
+            android:name=".ScheduledMockManager$ScheduleReceiver"
+            android:exported="false" />
     </application>
 
     <!-- 定位权限 (for map picker) -->

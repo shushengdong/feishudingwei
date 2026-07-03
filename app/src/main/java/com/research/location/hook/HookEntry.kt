@@ -16,6 +16,7 @@ class HookEntry : IXposedHookLoadPackage {
         SensorHook(),
         GeocoderHook(),
         ExifHook(),
+        BluetoothHook(),
         NetworkHook(),
         SystemHook(),
         SelfHideHook()

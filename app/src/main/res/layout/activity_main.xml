@@ -207,6 +207,20 @@
             android:layout_marginStart="2dp" />
     </LinearLayout>
 
+    <!-- Schedule Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="4dp">
+        <Button
+            android:id="@+id/btn_schedule"
+            android:layout_width="match_parent"
+            android:layout_height="34dp"
+            android:text="\u23F0 定时Mock"
+            android:textSize="12sp" />
+    </LinearLayout>
+
     <!-- Environment Info Bar -->
     <LinearLayout
         android:id="@+id/ll_env_info"
