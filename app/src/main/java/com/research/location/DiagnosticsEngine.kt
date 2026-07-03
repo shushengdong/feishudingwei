@@ -3,7 +3,6 @@ package com.research.location
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import com.research.location.hook.MockConfig
 
 /**
  * Environment diagnostics for the management app.
