@@ -243,7 +243,6 @@ class CoordinatesEngine(private val config: MockConfig) {
     val currentFrame: FrameSnapshot
         get() {
             val seed = deterministicSeed()
-            val rng = kotlin.random.Random(seed)
             return FrameSnapshot(
                 jitteredLat = currentLat,
                 jitteredLng = currentLng,
