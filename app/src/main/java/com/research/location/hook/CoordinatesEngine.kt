@@ -86,9 +86,32 @@ class CoordinatesEngine(private val config: MockConfig) {
             }
             "transition" -> {
                 if (bhv.transitionEnabled) {
-                    currentSpeed = 1.2f
-                    currentLat = currentLat + (Random.nextDouble() - 0.49) * 0.00005
-                    currentLng = currentLng + (Random.nextDouble() - 0.49) * 0.00005
+                    // Simulate arriving at destination over ~3 minutes
+                    // Phase 1 (0-60%): walk toward target (speed 1.0-1.5 m/s)
+                    // Phase 2 (60-90%): slow down (speed 0.3-0.8 m/s)
+                    // Phase 3 (90-100%): arrive, minor jitter at target
+                    val totalFrames = 90  // ~3 min at 2s/frame
+                    val progress = (frameIndex % totalFrames).toDouble() / totalFrames
+
+                    if (progress < 0.6) {
+                        val speed = 1.2 + Random.nextDouble() * 0.3
+                        currentSpeed = speed.toFloat()
+                        val dist = speed * 2.0 / 111_320.0 // m/s * interval / deg_per_m
+                        val angle = GeoMath.bearingDegrees(currentLat, currentLng, config.location.lat, config.location.lng)
+                        currentLat += dist * cos(Math.toRadians(angle))
+                        currentLng += dist * sin(Math.toRadians(angle))
+                    } else if (progress < 0.9) {
+                        currentSpeed = (0.3 + Random.nextDouble() * 0.5).toFloat()
+                        val dist = 0.8 * 2.0 / 111_320.0
+                        val angle = GeoMath.bearingDegrees(currentLat, currentLng, config.location.lat, config.location.lng)
+                        currentLat += dist * cos(Math.toRadians(angle))
+                        currentLng += dist * sin(Math.toRadians(angle))
+                    } else {
+                        currentSpeed = 0f
+                        val (dLat, dLng) = NoiseGenerator.gaussian2D(seed, jitterSigma * 0.2, currentLat)
+                        currentLat = config.location.lat + dLat
+                        currentLng = config.location.lng + dLng
+                    }
                     currentBearing = computeBearing()
                 } else {
                     currentLat = config.location.lat
