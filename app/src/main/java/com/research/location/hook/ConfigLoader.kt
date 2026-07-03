@@ -66,7 +66,10 @@ object ConfigLoader {
             wifi = override?.wifi ?: config.wifi,
             cell = override?.cell ?: config.cell,
             gnss = override?.gnss ?: config.gnss,
-            sensor = override?.sensor ?: config.sensor
+            sensor = override?.sensor ?: config.sensor,
+            network = config.network,
+            system = config.system,
+            selfHide = config.selfHide
         )
     }
 
@@ -76,6 +79,9 @@ object ConfigLoader {
         val wifi: WifiConfig,
         val cell: CellConfig,
         val gnss: GnssConfig,
-        val sensor: SensorConfig
+        val sensor: SensorConfig,
+        val network: NetworkConfig,
+        val system: SystemConfig,
+        val selfHide: SelfHideConfig
     )
 }
